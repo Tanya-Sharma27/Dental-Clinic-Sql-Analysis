@@ -84,7 +84,7 @@ erDiagram
 
 ### How the tables connect
 
-`appointments` is the hub. It holds a foreign key to `patients` and another to `providers`, so every visit is tied to exactly one of each. `procedures` hangs off `appointments` — a treatment cannot exist without the visit that delivered it.
+`appointments` is the hub. It holds a foreign key to `patients` and another to `providers`, so every visit is tied to exactly one of each. `procedures` hangs off `appointments` - a treatment cannot exist without the visit that delivered it.
 
 This structure is what allows a question like *"revenue per provider"* to be answered even though no single table contains both a provider name and a fee. The query walks the chain:
 
@@ -167,7 +167,7 @@ CREATE TABLE procedures (
 
 </details>
 
-![Schema created — four tables in the database](screenshots/01-schema-created.png)
+![Schema created - four tables in the database](screenshots/01-schema-created.png)
 
 ### Data loading and cleaning
 
@@ -189,7 +189,7 @@ Generated dates landed on weekends, which the practice does not schedule. Catchi
 
 ## 5. Analysis & Findings
 
-### Finding 1 — More than one in five appointments does not happen
+### Finding 1 - More than one in five appointments does not happen
 
 **Question:** What proportion of scheduled appointments are completed?
 
@@ -215,7 +215,7 @@ ORDER BY appointment_count DESC;
 
 ---
 
-### Finding 2 — Recall visits break far more than treatment visits
+### Finding 2 - Recall visits break far more than treatment visits
 
 **Question:** Which appointment types are most likely to break?
 
@@ -241,7 +241,7 @@ ORDER BY no_show_rate DESC;
 
 Recall is simultaneously the highest-volume and highest-risk category.
 
-**Clinical interpretation:** this gradient tracks perceived urgency, not patient reliability. Recall patients are asymptomatic — nothing hurts and nothing is visibly wrong, so the appointment feels optional. Extraction and crown patients attend because they are in pain or have unfinished work in the mouth.
+**Clinical interpretation:** this gradient tracks perceived urgency, not patient reliability. Recall patients are asymptomatic - nothing hurts and nothing is visibly wrong, so the appointment feels optional. Extraction and crown patients attend because they are in pain or have unfinished work in the mouth.
 
 *Technical note:* `SUM(CASE WHEN ...)` performs conditional counting inside the same `GROUP BY` that counts the total. A `WHERE status = 'No-show'` filter would remove the very rows needed for the denominator.
 
@@ -249,7 +249,7 @@ Recall is simultaneously the highest-volume and highest-risk category.
 
 ---
 
-### Finding 3 — The apparent provider difference is case mix, not performance
+### Finding 3 - The apparent provider difference is case mix, not performance
 
 **Question:** Do no-show rates differ by provider?
 
@@ -277,7 +277,7 @@ ORDER BY no_show_rate DESC;
 
 Hygienists cluster at 16–18%, dentists at 8–10%. Read in isolation, this looks like a staff performance problem.
 
-**It is not.** Hygienists are scheduled almost entirely with recall and periodontal maintenance visits — precisely the categories Finding 2 identified as highest-risk. The variation is explained by *what sits on the schedule*, not by who delivers the care.
+**It is not.** Hygienists are scheduled almost entirely with recall and periodontal maintenance visits - precisely the categories Finding 2 identified as highest-risk. The variation is explained by *what sits on the schedule*, not by who delivers the care.
 
 **Treating this table as a provider scorecard would be a misreading of confounded data.** Any fair comparison would need to hold appointment type constant.
 
@@ -285,7 +285,7 @@ Hygienists cluster at 16–18%, dentists at 8–10%. Read in isolation, this loo
 
 ---
 
-### Finding 4 — Volume and revenue move in opposite directions
+### Finding 4 - Volume and revenue move in opposite directions
 
 **Question:** Which procedures generate the most revenue?
 
@@ -304,13 +304,13 @@ ORDER BY total_revenue DESC;
 
 | Code | Procedure | Performed | Unit fee | Revenue |
 |---|---|---|---|---|
-| D2740 | Crown — porcelain/ceramic | 25 | $1,450 | **$36,250** |
-| D2391 | Resin composite — 1 surface | 49 | $215 | $10,535 |
-| D1110 | Prophylaxis — adult | 87 | $110 | $9,570 |
+| D2740 | Crown - porcelain/ceramic | 25 | $1,450 | **$36,250** |
+| D2391 | Resin composite - 1 surface | 49 | $215 | $10,535 |
+| D1110 | Prophylaxis - adult | 87 | $110 | $9,570 |
 | D0120 | Periodic oral evaluation | 112 | $65 | $7,280 |
 | D2950 | Core buildup | 25 | $285 | $7,125 |
-| D0274 | Bitewings — four films | 69 | $85 | $5,865 |
-| D7140 | Extraction — erupted tooth | 25 | $230 | $5,750 |
+| D0274 | Bitewings - four films | 69 | $85 | $5,865 |
+| D7140 | Extraction - erupted tooth | 25 | $230 | $5,750 |
 
 The most frequently performed procedure (D0120, 112 times) ranks only fourth in revenue. Crowns, performed a quarter as often, generate nearly five times more.
 
@@ -320,7 +320,7 @@ The most frequently performed procedure (D0120, 112 times) ranks only fourth in 
 
 ---
 
-### Finding 5 — Broken appointments cost roughly $15,600 per year
+### Finding 5 - Broken appointments cost roughly $15,600 per year
 
 **Question:** What is the estimated revenue lost to appointments that never happen?
 
@@ -358,7 +358,7 @@ Across the ~21-month period covered by the data, that is approximately **$15,600
 
 ---
 
-### Finding 6 — A usable recall list, not just a metric
+### Finding 6 - A usable recall list, not just a metric
 
 **Question:** Which patients are overdue for recall and should be contacted?
 
@@ -380,19 +380,19 @@ HAVING days_since_visit > 180
 ORDER BY days_since_visit DESC;
 ```
 
-This query returns named patients whose last completed visit exceeds 180 days, sorted by how overdue they are. The output — patient ID, name, insurance type, last visit date, days elapsed — is directly usable as a front-desk call list.
+This query returns named patients whose last completed visit exceeds 180 days, sorted by how overdue they are. The output - patient ID, name, insurance type, last visit date, days elapsed - is directly usable as a front-desk call list.
 
 **Clinical interpretation:** the 180-day threshold reflects standard six-month dental recall intervals rather than a generic one-year gap. A patient at 366 days has missed two recall cycles.
 
 *Technical notes:*
-- `HAVING`, not `WHERE` — the filter applies to `MAX()`, an aggregate, which does not exist until after grouping.
+- `HAVING`, not `WHERE` - the filter applies to `MAX()`, an aggregate, which does not exist until after grouping.
 - The reference date is derived from the data (`MAX(scheduled_date)`) rather than hardcoded, so the query stays correct as the dataset grows. An earlier version with a hardcoded date returned zero rows; deriving it fixed the bug and made the query portable.
 
 ![Overdue recall patients](screenshots/08-overdue-recall.png)
 
 ---
 
-### Finding 7 — No meaningful variation by insurance type
+### Finding 7 - No meaningful variation by insurance type
 
 **Question:** Do no-show rates differ by insurance type?
 
@@ -415,7 +415,7 @@ ORDER BY no_show_rate DESC;
 | PPO | 115 | 15 | 13.0% |
 | Medicaid | 65 | 6 | 9.2% |
 
-**This is reported as a non-finding, deliberately.** The spread is narrow and the counts are small — six no-shows in the smallest group. These differences fall within random variation and should not be presented as a pattern. Notably, Medicaid shows the *lowest* rate, contrary to the common assumption.
+**This is reported as a non-finding, deliberately.** The spread is narrow and the counts are small - six no-shows in the smallest group. These differences fall within random variation and should not be presented as a pattern. Notably, Medicaid shows the *lowest* rate, contrary to the common assumption.
 
 Insurance type proxies for income and access to transport. Even a genuine difference would call for improved reminder and transport support, not for treating a patient group as unreliable.
 
@@ -434,7 +434,7 @@ Insurance type proxies for income and access to transport. Even a genuine differ
 
 ## 7. Limitations
 
-- **The data is synthetic.** It was generated to model realistic clinic operations, with no-show behaviour deliberately weighted toward recall visits. The findings demonstrate schema design, query logic, and interpretation — they are not empirical discoveries about real practices.
+- **The data is synthetic.** It was generated to model realistic clinic operations, with no-show behaviour deliberately weighted toward recall visits. The findings demonstrate schema design, query logic, and interpretation - they are not empirical discoveries about real practices.
 - **Fees approximate US private-practice rates** and are fixed per procedure. Real fee schedules vary by insurance contract and geography.
 - **Revenue loss is an estimate** based on average visit value, as described in Finding 5.
 - **The insurance comparison is underpowered** at these sample sizes and is reported for completeness only.
