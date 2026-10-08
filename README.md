@@ -1,4 +1,4 @@
-    # Dental Clinic Operations — SQL Database & Analysis
+    # Dental Clinic Operations SQL Database & Analysis
 
 A relational database modelling a small general dental practice, with SQL analysis of appointment attendance, revenue performance, and patient recall compliance.
 
